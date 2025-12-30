@@ -3,5 +3,7 @@ export interface Word {
   word: string
   meaning: string
   language: string
-  category: string
+  category?: string
+  createdAt?: Date
+  updatedAt?: Date
 }

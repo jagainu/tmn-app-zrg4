@@ -1,32 +1,44 @@
 import { Word } from '@/types/word'
 
-const STORAGE_KEY = 'words'
+const STORAGE_KEY = 'vocabulary-words'
 
 export function getWords(): Word[] {
-  if (typeof window === 'undefined') return []
+  if (typeof window === 'undefined') {
+    return []
+  }
   
   try {
-    const words = localStorage.getItem(STORAGE_KEY)
-    return words ? JSON.parse(words) : []
-  } catch {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (!stored) {
+      return []
+    }
+    
+    const words = JSON.parse(stored)
+    return Array.isArray(words) ? words : []
+  } catch (error) {
+    console.error('Failed to load words from storage:', error)
     return []
   }
 }
 
 export function saveWords(words: Word[]): void {
-  if (typeof window === 'undefined') return
+  if (typeof window === 'undefined') {
+    return
+  }
   
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(words))
-  } catch {
-    console.error('Failed to save words to localStorage')
+  } catch (error) {
+    console.error('Failed to save words to storage:', error)
   }
 }
 
-export function addWord(word: Omit<Word, 'id'>): Word {
+export function addWord(wordData: Omit<Word, 'id'>): Word {
   const newWord: Word = {
-    ...word,
-    id: crypto.randomUUID()
+    ...wordData,
+    id: crypto.randomUUID(),
+    createdAt: new Date(),
+    updatedAt: new Date()
   }
   
   const words = getWords()
@@ -36,29 +48,39 @@ export function addWord(word: Omit<Word, 'id'>): Word {
   return newWord
 }
 
-export function updateWord(id: string, updates: Partial<Omit<Word, 'id'>>): boolean {
+export function updateWord(id: string, wordData: Partial<Omit<Word, 'id'>>): Word | null {
   const words = getWords()
-  const index = words.findIndex(word => word.id === id)
+  const index = words.findIndex(w => w.id === id)
   
-  if (index === -1) return false
+  if (index === -1) {
+    return null
+  }
   
-  words[index] = { ...words[index], ...updates }
+  const updatedWord = {
+    ...words[index],
+    ...wordData,
+    updatedAt: new Date()
+  }
+  
+  words[index] = updatedWord
   saveWords(words)
   
-  return true
+  return updatedWord
 }
 
 export function deleteWord(id: string): boolean {
   const words = getWords()
-  const filtered = words.filter(word => word.id !== id)
+  const filteredWords = words.filter(w => w.id !== id)
   
-  if (filtered.length === words.length) return false
+  if (filteredWords.length === words.length) {
+    return false
+  }
   
-  saveWords(filtered)
+  saveWords(filteredWords)
   return true
 }
 
-export function getWordById(id: string): Word | undefined {
+export function getWordById(id: string): Word | null {
   const words = getWords()
-  return words.find(word => word.id === id)
+  return words.find(w => w.id === id) || null
 }

@@ -1,95 +1,64 @@
 import { Word } from '@/types/word'
 
-const STORAGE_KEY = 'tmn-wordbook-words'
+const STORAGE_KEY = 'words'
 
-// Generate unique ID
-function generateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2, 9)
-}
-
-// Get all words
 export function getWords(): Word[] {
-  if (typeof window === 'undefined') {
-    return []
-  }
+  if (typeof window === 'undefined') return []
   
   try {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    return stored ? JSON.parse(stored) : []
-  } catch (error) {
-    console.error('Failed to load words from localStorage:', error)
+    const words = localStorage.getItem(STORAGE_KEY)
+    return words ? JSON.parse(words) : []
+  } catch {
     return []
   }
 }
 
-// Get a single word by ID
-export function getWord(id: string): Word | null {
-  const words = getWords()
-  return words.find(word => word.id === id) || null
+export function saveWords(words: Word[]): void {
+  if (typeof window === 'undefined') return
+  
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(words))
+  } catch {
+    console.error('Failed to save words to localStorage')
+  }
 }
 
-// Add a new word
-export function addWord(wordData: Omit<Word, 'id'>): Word {
+export function addWord(word: Omit<Word, 'id'>): Word {
   const newWord: Word = {
-    ...wordData,
-    id: generateId()
+    ...word,
+    id: crypto.randomUUID()
   }
   
   const words = getWords()
-  const updatedWords = [...words, newWord]
-  
-  if (typeof window !== 'undefined') {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedWords))
-    } catch (error) {
-      console.error('Failed to save words to localStorage:', error)
-      throw new Error('Failed to save word')
-    }
-  }
+  words.push(newWord)
+  saveWords(words)
   
   return newWord
 }
 
-// Update an existing word
-export function updateWord(updatedWord: Word): Word {
+export function updateWord(id: string, updates: Partial<Omit<Word, 'id'>>): boolean {
   const words = getWords()
-  const index = words.findIndex(word => word.id === updatedWord.id)
+  const index = words.findIndex(word => word.id === id)
   
-  if (index === -1) {
-    throw new Error('Word not found')
-  }
+  if (index === -1) return false
   
-  words[index] = updatedWord
-  
-  if (typeof window !== 'undefined') {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(words))
-    } catch (error) {
-      console.error('Failed to update word in localStorage:', error)
-      throw new Error('Failed to update word')
-    }
-  }
-  
-  return updatedWord
-}
-
-// Delete a word
-export function deleteWord(id: string): boolean {
-  const words = getWords()
-  const filteredWords = words.filter(word => word.id !== id)
-  
-  if (filteredWords.length === words.length) {
-    return false // Word not found
-  }
-  
-  if (typeof window !== 'undefined') {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(filteredWords))
-    } catch (error) {
-      console.error('Failed to delete word from localStorage:', error)
-      throw new Error('Failed to delete word')
-    }
-  }
+  words[index] = { ...words[index], ...updates }
+  saveWords(words)
   
   return true
+}
+
+export function deleteWord(id: string): boolean {
+  const words = getWords()
+  const filtered = words.filter(word => word.id !== id)
+  
+  if (filtered.length === words.length) return false
+  
+  saveWords(filtered)
+  return true
+}
+
+export function getWordById(id: string): Word | undefined {
+  const words = getWords()
+  return words.find(word => word.id === id)
 }

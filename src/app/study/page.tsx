@@ -65,7 +65,7 @@ export default function StudyPage() {
   }
 
   const getUniqueCategories = () => {
-    return Array.from(new Set(words.map(word => word.category).filter(Boolean)))
+    return Array.from(new Set(words.map(word => word.category).filter(Boolean))) as string[]
   }
 
   const getCurrentWord = () => {

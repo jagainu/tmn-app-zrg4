@@ -68,6 +68,26 @@ export function updateWord(id: string, wordData: Partial<Omit<Word, 'id'>>): Wor
   return updatedWord
 }
 
+// updateWord関数の別バージョン（Wordオブジェクトを直接受け取る）
+export function updateWordDirect(updatedWord: Word): Word | null {
+  const words = getWords()
+  const index = words.findIndex(w => w.id === updatedWord.id)
+  
+  if (index === -1) {
+    return null
+  }
+  
+  const finalWord = {
+    ...updatedWord,
+    updatedAt: new Date()
+  }
+  
+  words[index] = finalWord
+  saveWords(words)
+  
+  return finalWord
+}
+
 export function deleteWord(id: string): boolean {
   const words = getWords()
   const filteredWords = words.filter(w => w.id !== id)
@@ -83,4 +103,9 @@ export function deleteWord(id: string): boolean {
 export function getWordById(id: string): Word | null {
   const words = getWords()
   return words.find(w => w.id === id) || null
+}
+
+// getWord関数を追加（getWordByIdのエイリアス）
+export function getWord(id: string): Word | null {
+  return getWordById(id)
 }

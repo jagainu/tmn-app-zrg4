@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ArrowLeft, Save } from 'lucide-react'
-import { getWord, updateWord } from '@/lib/storage'
+import { getWord, updateWordDirect } from '@/lib/storage'
 import { Word } from '@/types/word'
 
 const COMMON_LANGUAGES = ['英語', '日本語', '中国語', '韓国語', 'フランス語', 'ドイツ語', 'スペイン語']
@@ -43,7 +43,7 @@ export default function EditWordPage({ params }: EditWordPageProps) {
           word: foundWord.word,
           meaning: foundWord.meaning,
           language: foundWord.language,
-          category: foundWord.category
+          category: foundWord.category || ''
         })
       }
       setIsLoading(false)
@@ -96,7 +96,7 @@ export default function EditWordPage({ params }: EditWordPageProps) {
         category: formData.category || ''
       }
 
-      updateWord(updatedWord)
+      updateWordDirect(updatedWord)
       router.push('/words')
     } catch (error) {
       console.error('Failed to update word:', error)

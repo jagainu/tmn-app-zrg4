@@ -74,7 +74,7 @@ export default function WordsPage() {
   }
 
   const getUniqueCategories = () => {
-    return Array.from(new Set(words.map(word => word.category).filter(Boolean)))
+    return Array.from(new Set(words.map(word => word.category).filter((category): category is string => Boolean(category))))
   }
 
   if (isLoading) {
